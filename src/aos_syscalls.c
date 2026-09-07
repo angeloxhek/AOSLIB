@@ -301,7 +301,7 @@ int sysspawn(const char* path, startup_info_t* info, uint64_t arg2, apid_t* resp
 	}
 	uint64_t size = stat->size_bytes;
 	char* name = stat->name;
-	if (size == 0 || size == -1 || !name) {
+	if (size == 0 || size == (uint64_t)-1 || !name) {
 		vfs_close(fd);
 		return SYS_RES_RANGE;
 	}
@@ -361,7 +361,7 @@ int sysexec(const char* path, startup_info_t* info, uint64_t arg2) {
 	}
 	uint64_t size = stat->size_bytes;
 	char* name = stat->name;
-	if (size == 0 || size == -1 || !name) {
+	if (size == 0 || size == (uint64_t)-1 || !name) {
 		vfs_close(fd);
 		return SYS_RES_RANGE;
 	}

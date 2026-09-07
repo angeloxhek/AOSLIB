@@ -188,7 +188,7 @@ unsigned long long strtoull(const char *nptr, char **endptr, int base) {
         c = char_to_val(*s);
         if (c >= base) break;
 
-        if (overflowed || acc > cutoff || (acc == cutoff && c > cutlim)) {
+        if (overflowed || acc > cutoff || (acc == cutoff && (unsigned int)c > cutlim)) {
             overflowed = true;
         } else {
             acc = acc * base + c;
