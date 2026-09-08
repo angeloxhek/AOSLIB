@@ -9,6 +9,13 @@
 extern "C" {
 #endif
 
+typedef enum {
+    THREAD_READY,
+    THREAD_RUNNING,
+    THREAD_BLOCKED,
+    THREAD_ZOMBIE
+} thread_state_t;
+
 typedef uint32_t apid_t;
 typedef uint64_t atid_t;
 
@@ -27,6 +34,7 @@ typedef enum {
 #define SYS_RES_DSK_ERR              -6
 #define SYS_RES_RANGE                -7
 #define SYS_RES_NOTFOUND             -8
+#define SYS_RES_OOM                  -9
 #define SYS_RES_KERNEL_ERR          -99
 
 #define STAT_OK                       0
@@ -53,6 +61,7 @@ typedef enum : uint8_t {
 
 typedef struct {
     startup_type_t type;
+    thread_state_t state;
     union {
         struct {
             int argc;

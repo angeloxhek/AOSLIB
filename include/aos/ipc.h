@@ -15,7 +15,8 @@ typedef enum {
     MSG_TYPE_AUTH,
     MSG_TYPE_INPUT,
     MSG_TYPE_VIDEO,
-    MSG_TYPE_WND
+    MSG_TYPE_WND,
+    MSG_TYPE_HARDWARE
 } msg_type_t;
 
 typedef enum {
@@ -23,8 +24,11 @@ typedef enum {
     MSG_SUBTYPE_QUERY,
     MSG_SUBTYPE_SEND,
     MSG_SUBTYPE_RESPONSE,
-    MSG_SUBTYPE_PING
+    MSG_SUBTYPE_PING,
+    MSG_SUBTYPE_PONG
 } msg_subtype_t;
+
+#define HW_EVT_IRQ 1
 
 typedef struct message_t {
     apid_t   sender_pid;

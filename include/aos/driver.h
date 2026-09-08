@@ -102,6 +102,12 @@ typedef struct aos_driver_info_t {
         .allowed_ports = {__VA_ARGS__} \
     };
 
+#define AOS_HANDLE_SUBTYPE_CHECK(expected_subtype) \
+    if (in->subtype != (expected_subtype)) { \
+        out->param1 = DRV_ERR_NOCOMM; \
+        break; \
+    }
+
 apid_t get_driver_pid(driver_type_t type);
 apid_t get_driver_pid_name(const char* name);
 uint64_t get_driver_pid_sleep_wrapper(void* arg);

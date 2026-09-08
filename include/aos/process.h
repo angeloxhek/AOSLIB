@@ -8,13 +8,6 @@
 extern "C" {
 #endif
 
-typedef enum {
-    THREAD_READY,
-    THREAD_RUNNING,
-    THREAD_BLOCKED,
-    THREAD_ZOMBIE
-} thread_state_t;
-
 typedef struct {
     apid_t   pid;
     char     name[32];
@@ -32,6 +25,7 @@ typedef struct {
     uint64_t wake_up_time;
 } thread_info_user_t;
 
+#ifndef AOSKERNEL
 int get_proc_info(apid_t pid, proc_info_user_t* out_info);
 int get_thread_info(atid_t tid, thread_info_user_t* out_info);
 int get_pid_list(apid_t* buff, uint64_t* count);
@@ -39,6 +33,7 @@ int get_tid_list(apid_t pid, atid_t* buff, uint64_t* count);
 int get_time_info(time_info_t* info);
 
 int sleep_while_zero(uint64_t (*func)(void*), void* arg, uint64_t timeout_ms, uint64_t* out_result);
+#endif
 
 #ifdef __cplusplus
 }
