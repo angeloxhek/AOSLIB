@@ -44,6 +44,7 @@ extern "C" {
 #define SYS_MAP_PHYS                  34
 #define SYS_GET_SPEC_INFO             35
 #define SYS_SET_PROCESS_AUTH          36
+#define SYS_SET_THREAD_STATE          37
 
 #ifndef AOSKERNEL
 int64_t syscall(uint64_t nr, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5);

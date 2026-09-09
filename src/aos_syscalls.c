@@ -419,6 +419,10 @@ int sys_set_process_auth(apid_t target_pid, auth_id_t user) {
     return (int)syscall(SYS_SET_PROCESS_AUTH, (uint64_t)target_pid, user.raw, 0, 0, 0);
 }
 
+int set_thread_state(atid_t tid, thread_state_t state) {
+	return (int)syscall(SYS_SET_THREAD_STATE, (uint64_t)tid, (uint64_t)state, 0, 0, 0);
+}
+
 driver_type_t dt_from_str(const char* str) {
     if (strcmp(str, "DT_WND") == 0) return DT_WND;
     if (strcmp(str, "DT_VIDEO") == 0) return DT_VIDEO;

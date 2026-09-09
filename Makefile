@@ -5,12 +5,13 @@ CC ?= $(CROSS_COMPILE)gcc
 AR ?= $(CROSS_COMPILE)ar
 CP ?= cp
 MKDIR ?= mkdir -p
-RM = rm -rf 
+RM = rm -rf
 
 BUILD_DIR ?= $(CURDIR)/build
 TEMP_DIR ?= $(CURDIR)/temp
 SRC_DIR = $(CURDIR)/src
 INC_DIR = $(CURDIR)/include
+AGFX_DIR = $(CURDIR)/agfx
 
 ifeq ($(V),1)
     Q :=
@@ -37,7 +38,7 @@ endif
 
 COMMON_CFLAGS = -Wall -Wextra -std=gnu11 -fno-omit-frame-pointer -ffreestanding -fno-pic -fno-pie -fstack-protector
 USER_COMMON_CFLAGS = $(COMMON_CFLAGS) -fno-asynchronous-unwind-tables $(ARCH_CFLAGS)
-LIB_CFLAGS = $(USER_COMMON_CFLAGS) -nostdinc -I$(INC_DIR)
+LIB_CFLAGS = $(USER_COMMON_CFLAGS) -nostdinc -I$(INC_DIR) -I$(AGFX_DIR)
 
 GENERIC_SRCS = $(filter-out $(SRC_DIR)/aos_start.c, $(wildcard $(SRC_DIR)/*.c))
 GENERIC_OBJS = $(patsubst $(SRC_DIR)/%.c, $(TEMP_DIR)/%.o, $(GENERIC_SRCS))
@@ -46,7 +47,10 @@ ARCH_DIR  = $(SRC_DIR)/arch/$(ARCH)
 ARCH_SRCS = $(wildcard $(ARCH_DIR)/*.c)
 ARCH_OBJS = $(patsubst $(ARCH_DIR)/%.c, $(TEMP_DIR)/arch_%.o, $(ARCH_SRCS))
 
-LIB_OBJS = $(GENERIC_OBJS) $(ARCH_OBJS)
+AGFX_SRCS = $(wildcard $(AGFX_DIR)/*.c)
+AGFX_OBJS = $(patsubst $(AGFX_DIR)/%.c, $(TEMP_DIR)/agfx_%.o, $(AGFX_SRCS))
+
+LIB_OBJS = $(GENERIC_OBJS) $(ARCH_OBJS) $(AGFX_OBJS)
 
 START_SRC = $(SRC_DIR)/aos_start.c
 START_OBJ = $(TEMP_DIR)/aos_start.o
@@ -57,6 +61,7 @@ TARGET_START = $(BUILD_DIR)/aos_start.o
 .PHONY: all prepare clean
 
 all: prepare $(TARGET_LIB) $(TARGET_START)
+	$(Q)$(RM) $(INC_DIR)/stb_truetype.h
 	@echo "AOSLIB Build Successful for $(ARCH)!"
 
 prepare:
@@ -64,6 +69,9 @@ prepare:
 	$(Q)$(MKDIR) $(BUILD_DIR)
 	$(ECHO) "${RED}[  MKDIR  ]${NC} ${TEMP_DIR}\n"
 	$(Q)$(MKDIR) $(TEMP_DIR)
+	@if [ -d "$(AGFX_DIR)" ]; then \
+		$(CP) -f $(AGFX_DIR)/*.h $(INC_DIR)/; \
+	fi
 
 $(TARGET_LIB): $(LIB_OBJS)
 	$(ECHO) "${LCYAN}[   AR    ]${NC} $@\n"
@@ -81,8 +89,13 @@ $(TEMP_DIR)/arch_%.o: $(ARCH_DIR)/%.c | prepare
 	$(ECHO) "${CYAN}[   CC    ]${NC} (arch: $(ARCH)) $<\n"
 	$(Q)$(CC) $(LIB_CFLAGS) -c $< -o $@
 
+$(TEMP_DIR)/agfx_%.o: $(AGFX_DIR)/%.c | prepare
+	$(ECHO) "${CYAN}[   CC    ]${NC} (AGFX) $<\n"
+	$(Q)$(CC) $(LIB_CFLAGS) -c $< -o $@
+
 clean:
 	$(ECHO) "${DRED}[   RM    ]${NC} ${TEMP_DIR}\n"
 	$(Q)$(RM) $(TEMP_DIR)
 	$(ECHO) "${DRED}[   RM    ]${NC} ${BUILD_DIR}\n"
 	$(Q)$(RM) $(BUILD_DIR)
+	$(Q)$(RM) $(INC_DIR)/agfx*.h $(INC_DIR)/stb_truetype.h

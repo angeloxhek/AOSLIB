@@ -31,6 +31,7 @@ int get_thread_info(atid_t tid, thread_info_user_t* out_info);
 int get_pid_list(apid_t* buff, uint64_t* count);
 int get_tid_list(apid_t pid, atid_t* buff, uint64_t* count);
 int get_time_info(time_info_t* info);
+int set_thread_state(atid_t tid, thread_state_t state);
 
 int sleep_while_zero(uint64_t (*func)(void*), void* arg, uint64_t timeout_ms, uint64_t* out_result);
 #endif

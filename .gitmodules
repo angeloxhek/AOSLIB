@@ -1,0 +1,3 @@
+[submodule "agfx"]
+	path = agfx
+	url = https://github.com/angeloxhek/AGFX.git

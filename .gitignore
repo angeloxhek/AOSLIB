@@ -56,3 +56,4 @@ dkms.conf
 
 build/
 temp/
+include/agfx*.h
