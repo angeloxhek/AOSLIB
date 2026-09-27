@@ -415,12 +415,20 @@ int sysget_spec_info(uint64_t info_id, void* out_buffer) {
 	return (int)syscall(SYS_GET_SPEC_INFO, info_id, (uint64_t)out_buffer, 0, 0, 0);
 }
 
-int sys_set_process_auth(apid_t target_pid, auth_id_t user) {
+int sysset_process_auth(apid_t target_pid, auth_id_t user) {
     return (int)syscall(SYS_SET_PROCESS_AUTH, (uint64_t)target_pid, user.raw, 0, 0, 0);
 }
 
 int set_thread_state(atid_t tid, thread_state_t state) {
 	return (int)syscall(SYS_SET_THREAD_STATE, (uint64_t)tid, (uint64_t)state, 0, 0, 0);
+}
+
+int set_thread_priority(atid_t target_tid, thread_prio_t priority) {
+    return (int)syscall(SYS_SET_THREAD_PRIORITY, (uint64_t)target_tid, (uint64_t)priority, 0, 0, 0);
+}
+
+int set_driver_status(apid_t target_pid, driver_status_t status) {
+	return (int)syscall(SYS_SET_DRIVER_STATUS, (uint64_t)target_pid, (uint64_t)status, 0, 0, 0);
 }
 
 driver_type_t dt_from_str(const char* str) {

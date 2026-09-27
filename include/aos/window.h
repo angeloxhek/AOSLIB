@@ -21,7 +21,9 @@ extern "C" {
 typedef enum {
     WND_CMD_CREATE = 1,
 	WND_CMD_FLUSH,
-	WND_CMD_GET_SCREEN_INFO
+	WND_CMD_GET_SCREEN_INFO,
+	WND_CMD_DESTROY,
+    WND_CMD_GET_THEME
 } window_cmd_t;
 
 typedef struct {
@@ -48,6 +50,8 @@ typedef struct {
 window_t* window_create(int x, int y, int w, int h, uint32_t flags);
 void window_flush(window_t* win);
 int get_screen_info(screen_info_t* info);
+void window_destroy(window_t* win);
+int get_system_theme(void* out_theme);
 
 #ifdef __cplusplus
 }

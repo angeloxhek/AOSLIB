@@ -73,6 +73,19 @@ typedef struct {
     uint8_t  blue_mask_shift;
 } __attribute__((packed)) sys_video_t;
 
+typedef enum {
+	THREAD_PRIO_REALTIME = 0,
+	THREAD_PRIO_SYSTEM,
+	THREAD_PRIO_NORMAL
+} thread_prio_t;
+
+#define THREAD_PRIO_LEVELS 3
+
+typedef enum {
+	DRV_STAT_CREATED = 0,
+	DRV_STAT_READY
+} driver_status_t;
+
 #define AOS_DRIVER_MAGIC 0x44525652
 #define DRIVER_NAME_MAX 32
 
@@ -114,6 +127,8 @@ uint64_t get_driver_pid_sleep_wrapper(void* arg);
 driver_type_t dt_from_str(const char* str);
 uint64_t get_system_ticks(void);
 int get_sysinfo(system_info_t* info);
+int set_thread_priority(atid_t target_tid, thread_prio_t priority);
+int set_driver_status(apid_t target_pid, driver_status_t status);
 
 void hal_outb(uint16_t port, uint8_t val);
 uint8_t hal_inb(uint16_t port);

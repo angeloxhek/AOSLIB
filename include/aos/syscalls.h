@@ -45,6 +45,8 @@ extern "C" {
 #define SYS_GET_SPEC_INFO             35
 #define SYS_SET_PROCESS_AUTH          36
 #define SYS_SET_THREAD_STATE          37
+#define SYS_SET_THREAD_PRIORITY       38
+#define SYS_SET_DRIVER_STATUS         39
 
 #ifndef AOSKERNEL
 int64_t syscall(uint64_t nr, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5);
@@ -62,7 +64,7 @@ int sysexecex(spawn_args_t* args);
 int sysedit_sys_flags(uint32_t flags);
 int sysmap_phys(uint64_t phys_addr, uint64_t size_bytes, uint64_t* out_vaddr);
 int sysget_spec_info(uint64_t info_id, void* out_buffer);
-int sys_set_process_auth(apid_t target_pid, auth_id_t user);
+int sysset_process_auth(apid_t target_pid, auth_id_t user);
 
 uint64_t shm_alloc(uint64_t size_bytes, void** out_vaddr);
 int shm_allow(uint64_t shm_id, apid_t target_pid);

@@ -6,6 +6,7 @@
 #include <aos/ipc.h>
 #include <aos/syscalls.h>
 #include <aos/window.h>
+#include <agfx_ui.h>
 
 static apid_t wnd_driver_pid = 0;
 
@@ -15,11 +16,14 @@ window_t* window_create(int x, int y, int w, int h, uint32_t flags) {
     ensure_wnd_init();
     if (wnd_driver_pid == 0) return 0;
 
-    window_t* win = malloc(sizeof(window_t));
+    window_t* win = (window_t*)malloc(sizeof(window_t));
+    if (!win) return 0;
+
     win->w = w;
     win->h = h;
 
-    win->shm_id = shm_alloc(w * h * 4, (void**)&win->buffer);
+    uint64_t frame_size = (uint64_t)w * h * 4;
+    win->shm_id = shm_alloc(frame_size * 2, (void**)&win->buffer);
     if (!win->shm_id) { free(win); return 0; }
 
     shm_allow(win->shm_id, wnd_driver_pid);
@@ -54,7 +58,15 @@ window_t* window_create(int x, int y, int w, int h, uint32_t flags) {
 }
 
 void window_flush(window_t* win) {
+    if (!win) return;
     ensure_wnd_init();
+
+    uint64_t frame_size = (uint64_t)win->w * win->h * 4;
+    uint8_t* back_buffer = (uint8_t*)win->buffer;
+    uint8_t* front_buffer = back_buffer + frame_size;
+    
+    hal_memcpy_toio(front_buffer, back_buffer, frame_size);
+
     message_t req;
     memset(&req, 0, sizeof(message_t));
     req.type = MSG_TYPE_WND;
@@ -84,4 +96,62 @@ int get_screen_info(screen_info_t* info) {
         return 0;
     }
     return -1;
+}
+
+void window_destroy(window_t* win) {
+    if (!win) return;
+    ensure_wnd_init();
+    if (wnd_driver_pid == 0) return;
+
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.type = MSG_TYPE_WND;
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = WND_CMD_DESTROY;
+    req.param2 = win->win_id;
+
+    ipc_send(wnd_driver_pid, &req);
+    ipc_recv_ex(wnd_driver_pid, MSG_TYPE_WND, MSG_SUBTYPE_RESPONSE, &resp);
+
+    shm_free(win->shm_id);
+    free(win);
+}
+
+int get_system_theme(void* out_theme) {
+    if (!out_theme) return -1;
+    ensure_wnd_init();
+    if (wnd_driver_pid == 0) return -1;
+
+    void* shm_vaddr = 0;
+    uint64_t shm_id = shm_alloc(sizeof(agfx_ui_theme_t), &shm_vaddr);
+    if (!shm_id) return -1;
+
+    shm_allow(shm_id, wnd_driver_pid);
+
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.type = MSG_TYPE_WND;
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = WND_CMD_GET_THEME;
+    *(uint64_t*)(req.data) = shm_id;
+
+    ipc_send(wnd_driver_pid, &req);
+    ipc_recv_ex(wnd_driver_pid, MSG_TYPE_WND, MSG_SUBTYPE_RESPONSE, &resp);
+
+    if (resp.param1 == 0) {
+        memcpy(out_theme, shm_vaddr, sizeof(agfx_ui_theme_t));
+        shm_free(shm_id);
+        return 0;
+    }
+
+    shm_free(shm_id);
+    return -1;
+}
+
+int agfx_get_system_theme_hook(agfx_ui_theme_t* out_theme) {
+    return get_system_theme((void*)out_theme);
 }
