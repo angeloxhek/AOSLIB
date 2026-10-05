@@ -95,7 +95,11 @@ typedef struct {
     time_info_t startup_time;
 } aos_tcb_t;
 
-#define PEB_VIRT_ADDR 0x00007FFFFE000000
+#if defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(__aarch64__)
+#define PEB_VIRT_ADDR 0x00007FFFFE000000ULL
+#else
+#define PEB_VIRT_ADDR 0x7FFE0000UL
+#endif
 
 typedef struct {
     apid_t pid;
@@ -104,7 +108,11 @@ typedef struct {
     char process_name[32];
 } aos_peb_t;
 
-#define AOS_GET_TCB() ((aos_tcb_t __seg_fs *)0)
+#if defined(__x86_64__) || defined(__i386__)
+    #define AOS_GET_TCB() ((aos_tcb_t __seg_fs *)0)
+#else
+    #error "Unsupported architecture for AOS_GET_TCB()"
+#endif
 #define AOS_GET_PEB() ((aos_peb_t*)PEB_VIRT_ADDR)
 
 #ifndef UNUSED

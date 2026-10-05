@@ -411,8 +411,8 @@ int sysmap_phys(uint64_t phys_addr, uint64_t size_bytes, uint64_t* out_vaddr) {
 	return (int)syscall(SYS_MAP_PHYS, phys_addr, size_bytes, (uint64_t)out_vaddr, 0, 0);
 }
 
-int sysget_spec_info(uint64_t info_id, void* out_buffer) {
-	return (int)syscall(SYS_GET_SPEC_INFO, info_id, (uint64_t)out_buffer, 0, 0, 0);
+int sysget_spec_info(uint64_t info_id, void* out_buffer, uint64_t size) {
+	return (int)syscall(SYS_GET_SPEC_INFO, info_id, (uint64_t)out_buffer, size, 0, 0);
 }
 
 int sysset_process_auth(apid_t target_pid, auth_id_t user) {

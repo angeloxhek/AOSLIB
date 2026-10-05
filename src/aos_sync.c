@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <aos/sync.h>
 #include <aos/syscalls.h>
-#include <aos/driver.h>
+#include <aos/sysinfo.h>
 #include <aos/process.h>
 
 void mutex_init(mutex_t* m) {

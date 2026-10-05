@@ -63,7 +63,6 @@ int sysexecex(spawn_args_t* args);
 
 int sysedit_sys_flags(uint32_t flags);
 int sysmap_phys(uint64_t phys_addr, uint64_t size_bytes, uint64_t* out_vaddr);
-int sysget_spec_info(uint64_t info_id, void* out_buffer);
 int sysset_process_auth(apid_t target_pid, auth_id_t user);
 
 uint64_t shm_alloc(uint64_t size_bytes, void** out_vaddr);

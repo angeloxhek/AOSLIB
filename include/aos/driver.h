@@ -24,42 +24,6 @@ typedef enum {
 #define FSGSBASE (1 << 0)
 
 typedef struct {
-    uint64_t uptime;
-    uint64_t fs_base;
-    uint64_t gs_base;
-    uint64_t kernel_gs_base;
-    uint32_t flags;
-    uint16_t cpu_flags;
-} system_info_t;
-
-typedef enum {
-    DISK_TYPE_UNKNOWN = 0,
-    DISK_TYPE_IDE,
-    DISK_TYPE_AHCI,
-    DISK_TYPE_NVME,
-    DISK_TYPE_USB,
-    DISK_TYPE_RAM
-} disk_connection_type_t;
-
-typedef struct {
-    uint64_t id;
-    uint64_t total_sectors;
-    uint32_t sector_size;
-    disk_connection_type_t type;
-    char model[40];
-    uint8_t is_removable;
-} disk_info_t;
-
-typedef struct {
-    uint64_t id;
-    uint64_t parent_disk_id;
-    uint64_t start_lba;
-    uint64_t size_sectors;
-    uint8_t  partition_type;
-    uint8_t  bootable;
-} partition_info_t;
-
-typedef struct {
     uint64_t framebuffer_addr;
     uint32_t width;
     uint32_t height;
@@ -72,6 +36,25 @@ typedef struct {
     uint8_t  blue_mask_size;
     uint8_t  blue_mask_shift;
 } __attribute__((packed)) sys_video_t;
+
+typedef enum {
+	BOOT_DISK_UNKNOWN = 0,
+	BOOT_DISK_MBR,
+	BOOT_DISK_GPT
+} sys_boot_disk_type_t;
+
+typedef struct {
+    uint32_t type; // sys_boot_disk_type_t
+    union {
+        struct {
+            uint64_t part_lba;
+            uint32_t drive_sign;
+        } __attribute__((packed)) mbr;
+        struct {
+            uint8_t uuid[16];
+        } __attribute__((packed)) gpt;
+    } specific;
+} __attribute__((packed)) sys_boot_disk_t;
 
 typedef enum {
 	THREAD_PRIO_REALTIME = 0,
@@ -95,6 +78,7 @@ typedef enum {
 #define DRV_PERM_GET_SPEC_INFO     (1 << 3)
 
 #define SPEC_INFO_VIDEO 1
+#define SPEC_INFO_BOOT_DISK 2
 
 typedef struct aos_driver_info_t {
     uint32_t magic;
@@ -125,10 +109,9 @@ apid_t get_driver_pid(driver_type_t type);
 apid_t get_driver_pid_name(const char* name);
 uint64_t get_driver_pid_sleep_wrapper(void* arg);
 driver_type_t dt_from_str(const char* str);
-uint64_t get_system_ticks(void);
-int get_sysinfo(system_info_t* info);
 int set_thread_priority(atid_t target_tid, thread_prio_t priority);
 int set_driver_status(apid_t target_pid, driver_status_t status);
+int sysget_spec_info(uint64_t info_id, void* out_buffer, uint64_t size);
 
 void hal_outb(uint16_t port, uint8_t val);
 uint8_t hal_inb(uint16_t port);
