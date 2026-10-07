@@ -47,6 +47,8 @@ extern "C" {
 #define SYS_SET_THREAD_STATE          37
 #define SYS_SET_THREAD_PRIORITY       38
 #define SYS_SET_DRIVER_STATUS         39
+#define SYS_IPC_REPLY                 40
+#define SYS_IPC_REQUEUE               41
 
 #ifndef AOSKERNEL
 int64_t syscall(uint64_t nr, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5);

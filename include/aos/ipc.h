@@ -34,6 +34,7 @@ typedef struct message_t {
     apid_t   sender_pid;
     uint32_t type;
     uint32_t subtype;
+    uint64_t id;
     uint64_t param1;
     uint64_t param2;
     uint64_t param3;
@@ -44,6 +45,8 @@ int64_t __ipc_recv(message_t* out_msg);
 int64_t __ipc_tryrecv(message_t* out_msg);
 int64_t ipc_tryrecv(message_t* out_msg);
 int64_t ipc_send(apid_t dest_pid, message_t* msg);
+int64_t ipc_reply(message_t* in_msg, message_t* out_msg);
+int64_t ipc_requeue(message_t* msg);
 uint64_t get_ipc_count(void);
 void ipc_sync(void);
 void ipc_recv(message_t* out_msg);

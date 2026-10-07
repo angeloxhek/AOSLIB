@@ -48,6 +48,14 @@ int64_t ipc_send(apid_t dest_pid, message_t* msg) {
     return syscall(SYS_IPC_SEND, (uint64_t)dest_pid, (uint64_t)msg, 0, 0, 0);
 }
 
+int64_t ipc_reply(message_t* in_msg, message_t* out_msg) {
+    return syscall(SYS_IPC_REPLY, (uint64_t)in_msg, (uint64_t)out_msg, 0, 0, 0);
+}
+
+int64_t ipc_requeue(message_t* msg) {
+    return syscall(SYS_IPC_REQUEUE, (uint64_t)msg, 0, 0, 0, 0);
+}
+
 apid_t get_driver_pid(driver_type_t type) {
     return (apid_t)syscall(SYS_GET_DRIVER_PID, (uint64_t)type, 0, 0, 0, 0);
 }
