@@ -19,12 +19,15 @@ static int video_rpc_call(message_t* req, message_t* resp_out) {
 
     req->type = MSG_TYPE_VIDEO;
 
-    ipc_send(video_driver_pid, req);
+    int64_t id = ipc_send(video_driver_pid, req);
+	
+	if (id < 0) return id;
 
     ipc_recv_ex(
         video_driver_pid,
         MSG_TYPE_VIDEO,
         MSG_SUBTYPE_NONE,
+		(uint64_t)id,
         resp_out
     );
 

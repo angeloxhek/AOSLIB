@@ -12,9 +12,31 @@ static apid_t wnd_driver_pid = 0;
 
 #define ensure_wnd_init() { if (wnd_driver_pid == 0) wnd_driver_pid = get_driver_pid(DT_WND); }
 
+static int wnd_rpc_call(message_t* req, message_t* resp_out) {
+    ensure_wnd_init();
+
+    req->type = MSG_TYPE_WND;
+
+	int64_t id;
+	do {
+		id = ipc_send(wnd_driver_pid, req);
+	} while (id == SYS_RES_NOTFOUND);
+	
+	if (id < 0) return id;
+
+    ipc_recv_ex(
+        wnd_driver_pid,
+        MSG_TYPE_WND,
+        MSG_SUBTYPE_NONE,
+		(uint64_t)id,
+        resp_out
+    );
+
+    return (int)resp_out->param1;
+}
+
 window_t* window_create(int x, int y, int w, int h, uint32_t flags) {
     ensure_wnd_init();
-    if (wnd_driver_pid == 0) return 0;
 
     window_t* win = (window_t*)malloc(sizeof(window_t));
     if (!win) return 0;
@@ -43,11 +65,10 @@ window_t* window_create(int x, int y, int w, int h, uint32_t flags) {
     _req->height = h;
     _req->flags = flags;
     _req->shm_id = win->shm_id;
+	
+	int res = wnd_rpc_call(&req, &resp);
 
-    ipc_send(wnd_driver_pid, &req);
-    ipc_recv_ex(wnd_driver_pid, MSG_TYPE_WND, MSG_SUBTYPE_RESPONSE, &resp);
-
-    if (resp.param1 == 0) {
+    if (res == WND_ERR_OK) {
         win->win_id = resp.param2;
         return win;
     }
@@ -79,7 +100,6 @@ void window_flush(window_t* win) {
 int get_screen_info(screen_info_t* info) {
 	if (!info) return -1;
     ensure_wnd_init();
-    if (wnd_driver_pid == 0) return -1;
 
     message_t req, resp;
     memset(&req, 0, sizeof(message_t));
@@ -87,15 +107,13 @@ int get_screen_info(screen_info_t* info) {
     req.subtype = MSG_SUBTYPE_QUERY;
     req.param1 = WND_CMD_GET_SCREEN_INFO;
 
-    ipc_send(wnd_driver_pid, &req);
-    ipc_recv_ex(wnd_driver_pid, MSG_TYPE_WND, MSG_SUBTYPE_RESPONSE, &resp);
+	int res = wnd_rpc_call(&req, &resp);
 
-    if (resp.param1 == 0) { // OK
+    if (res == WND_ERR_OK) {
         info->width = (uint16_t)(resp.param2 >> 16);
         info->height = (uint16_t)(resp.param2 & 0xFFFF);
-        return 0;
     }
-    return -1;
+    return res;
 }
 
 void window_destroy(window_t* win) {
@@ -112,8 +130,7 @@ void window_destroy(window_t* win) {
     req.param1 = WND_CMD_DESTROY;
     req.param2 = win->win_id;
 
-    ipc_send(wnd_driver_pid, &req);
-    ipc_recv_ex(wnd_driver_pid, MSG_TYPE_WND, MSG_SUBTYPE_RESPONSE, &resp);
+    wnd_rpc_call(&req, &resp);
 
     shm_free(win->shm_id);
     free(win);
@@ -122,7 +139,6 @@ void window_destroy(window_t* win) {
 int get_system_theme(void* out_theme) {
     if (!out_theme) return -1;
     ensure_wnd_init();
-    if (wnd_driver_pid == 0) return -1;
 
     void* shm_vaddr = 0;
     uint64_t shm_id = shm_alloc(sizeof(agfx_ui_theme_t), &shm_vaddr);
@@ -139,17 +155,14 @@ int get_system_theme(void* out_theme) {
     req.param1 = WND_CMD_GET_THEME;
     *(uint64_t*)(req.data) = shm_id;
 
-    ipc_send(wnd_driver_pid, &req);
-    ipc_recv_ex(wnd_driver_pid, MSG_TYPE_WND, MSG_SUBTYPE_RESPONSE, &resp);
+    int res = wnd_rpc_call(&req, &resp);
 
-    if (resp.param1 == 0) {
+    if (res == WND_ERR_OK) {
         memcpy(out_theme, shm_vaddr, sizeof(agfx_ui_theme_t));
-        shm_free(shm_id);
-        return 0;
     }
 
     shm_free(shm_id);
-    return -1;
+    return res;
 }
 
 int agfx_get_system_theme_hook(agfx_ui_theme_t* out_theme) {

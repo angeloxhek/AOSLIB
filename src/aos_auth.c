@@ -18,9 +18,11 @@ static int auth_rpc_call(message_t* req, message_t* resp_out) {
     ensure_auth_init();
     req->type = MSG_TYPE_AUTH;
     
-    ipc_send(auth_driver_pid, req);
+    int64_t id = ipc_send(auth_driver_pid, req);
+	
+	if (id < 0) return id;
     
-    ipc_recv_ex(auth_driver_pid, MSG_TYPE_AUTH, MSG_SUBTYPE_NONE, resp_out);
+    ipc_recv_ex(auth_driver_pid, MSG_TYPE_AUTH, MSG_SUBTYPE_NONE, (uint64_t)id, resp_out);
     
     return (int)resp_out->param1;
 }

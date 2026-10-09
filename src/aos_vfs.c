@@ -19,12 +19,15 @@ static int vfs_rpc_call(message_t* req, message_t* resp_out) {
 
     req->type = MSG_TYPE_VFS;
 
-    ipc_send(vfs_driver_pid, req);
+    int64_t id = ipc_send(vfs_driver_pid, req);
+	
+	if (id < 0) return id;
 
     ipc_recv_ex(
         vfs_driver_pid,
         MSG_TYPE_VFS,
         MSG_SUBTYPE_NONE,
+		(uint64_t)id,
         resp_out
     );
 
