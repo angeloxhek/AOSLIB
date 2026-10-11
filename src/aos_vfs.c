@@ -27,7 +27,8 @@ static int vfs_rpc_call(message_t* req, message_t* resp_out) {
         vfs_driver_pid,
         MSG_TYPE_VFS,
         MSG_SUBTYPE_NONE,
-		(uint64_t)id,
+        (uint64_t)id,
+        MSG_FLAG_NONE,
         resp_out
     );
 

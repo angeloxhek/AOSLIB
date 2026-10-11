@@ -150,7 +150,7 @@ int64_t ipc_tryrecv(message_t* out_msg) {
     return __ipc_tryrecv(out_msg);
 }
 
-void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, message_t* out_msg) {
+void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, uint64_t flags, message_t* out_msg) {
     msg_node_t *curr = pending_head;
     msg_node_t *prev = NULL;
 
@@ -158,7 +158,8 @@ void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id
         if ((pid == 0 || curr->msg.sender_pid == pid) &&
             (type == MSG_TYPE_NONE || curr->msg.type == type) &&
             (subtype == MSG_SUBTYPE_NONE || curr->msg.subtype == subtype) &&
-			(id == 0 || id == curr->msg.id)) {
+			(id == 0 || id == curr->msg.id) &&
+			(flags == 0 || (flags & curr->msg.flags) == flags)) {
             
             *out_msg = curr->msg;
             
@@ -181,7 +182,8 @@ void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id
         if ((pid == 0 || temp_msg.sender_pid == pid) && 
             (type == MSG_TYPE_NONE || temp_msg.type == type) && 
             (subtype == MSG_SUBTYPE_NONE || temp_msg.subtype == subtype) &&
-			(id == 0 || id == temp_msg.id)) {
+			(id == 0 || id == temp_msg.id) &&
+			(flags == 0 || (flags & temp_msg.flags) == flags)) {
             
             *out_msg = temp_msg;
             return;
@@ -191,14 +193,15 @@ void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id
     }
 }
 
-int ipc_tryrecv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, message_t* out_msg) {
+int ipc_tryrecv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, uint64_t flags, message_t* out_msg) {
     msg_node_t *curr = pending_head;
     msg_node_t *prev = NULL;
     while (curr) {
         if ((pid == 0 || curr->msg.sender_pid == pid) &&
             (type == MSG_TYPE_NONE || curr->msg.type == type) &&
             (subtype == MSG_SUBTYPE_NONE || curr->msg.subtype == subtype) &&
-			(id == 0 || id == curr->msg.id)) {
+			(id == 0 || id == curr->msg.id) &&
+			(flags == 0 || (flags & curr->msg.flags) == flags)) {
             *out_msg = curr->msg;
             if (prev) prev->next = curr->next;
             else pending_head = curr->next;
@@ -215,7 +218,8 @@ int ipc_tryrecv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t 
         if ((pid == 0 || temp_msg.sender_pid == pid) && 
             (type == MSG_TYPE_NONE || temp_msg.type == type) && 
             (subtype == MSG_SUBTYPE_NONE || temp_msg.subtype == subtype) &&
-			(id == 0 || id == temp_msg.id)) {
+			(id == 0 || id == temp_msg.id) &&
+			(flags == 0 || (flags & temp_msg.flags) == flags)) {
             
             *out_msg = temp_msg;
             return 0;

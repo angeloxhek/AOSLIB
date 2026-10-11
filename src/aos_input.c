@@ -26,6 +26,7 @@ static int input_rpc_call(message_t* req, message_t* resp_out) {
         MSG_TYPE_INPUT,
         MSG_SUBTYPE_NONE,
 		(uint64_t)id,
+        MSG_FLAG_NONE,
         resp_out
     );
 

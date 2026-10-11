@@ -35,11 +35,16 @@ typedef struct message_t {
     uint32_t type;
     uint32_t subtype;
     uint64_t id;
+	uint64_t flags;
     uint64_t param1;
     uint64_t param2;
     uint64_t param3;
     uint8_t  data[64];
 } __attribute__((packed, aligned(8))) message_t;
+
+#define MSG_FLAG_NONE   (0 << 0)
+#define MSG_FLAG_NORMAL (1 << 0)
+#define MSG_FLAG_NEW_ID (1 << 1)
 
 int64_t __ipc_recv(message_t* out_msg);
 int64_t __ipc_tryrecv(message_t* out_msg);
@@ -50,8 +55,8 @@ int64_t ipc_requeue(message_t* msg);
 uint64_t get_ipc_count(void);
 void ipc_sync(void);
 void ipc_recv(message_t* out_msg);
-void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, message_t* out_msg);
-int ipc_tryrecv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, message_t* out_msg);
+void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, uint64_t flags, message_t* out_msg);
+int ipc_tryrecv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id, uint64_t flags, message_t* out_msg);
 void ipc_seek(int64_t offset, seek_whence_t whence);
 int ipc_get_at(uint64_t index, message_t* out);
 int ipc_set_limit(apid_t pid, uint64_t new_limit);
