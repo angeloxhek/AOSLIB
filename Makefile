@@ -36,9 +36,16 @@ ifeq ($(ARCH),x86_64)
     ARCH_CFLAGS ?= -m64 -mno-red-zone
 endif
 
-COMMON_CFLAGS = -Wall -Wextra -std=gnu11 -fno-omit-frame-pointer -ffreestanding -fno-pic -fno-pie -fstack-protector
-USER_COMMON_CFLAGS = $(COMMON_CFLAGS) -fno-asynchronous-unwind-tables $(ARCH_CFLAGS)
-LIB_CFLAGS = $(USER_COMMON_CFLAGS) -nostdinc -I$(INC_DIR) -I$(AGFX_DIR)
+COMMON_CFLAGS ?= -Wall -Wextra -std=gnu11 -fno-omit-frame-pointer -ffreestanding -fno-pic -fno-pie \
+				 -fstack-protector -ffunction-sections -fdata-sections
+USER_COMMON_CFLAGS ?= $(COMMON_CFLAGS) -fno-asynchronous-unwind-tables $(ARCH_CFLAGS)
+LIB_CFLAGS ?= $(USER_COMMON_CFLAGS) -nostdinc -I$(INC_DIR) -I$(AGFX_DIR)
+
+ifeq ($(DEBUG), 1)
+    COMMON_CFLAGS += -DDEBUG_MODE -g3 -O0
+else
+	COMMON_CFLAGS += -Oz
+endif
 
 GENERIC_SRCS = $(filter-out $(SRC_DIR)/aos_start.c, $(wildcard $(SRC_DIR)/*.c))
 GENERIC_OBJS = $(patsubst $(SRC_DIR)/%.c, $(TEMP_DIR)/%.o, $(GENERIC_SRCS))

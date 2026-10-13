@@ -27,8 +27,8 @@ typedef enum {
     VFS_CMD_OPEN  = 1, VFS_CMD_OPENAT, VFS_CMD_CLOSE,
     VFS_CMD_READ, VFS_CMD_WRITE, VFS_CMD_STAT,
     VFS_CMD_LIST, VFS_CMD_FLOCK, VFS_CMD_SEEK,
-	VFS_CMD_REGISTER_FS, VFS_CMD_MOUNT_FS,
-	VFS_CMD_GET_LABEL
+	VFS_CMD_REGISTER_FS, VFS_CMD_MOUNT_FS, VFS_CMD_UMOUNT_FS,
+	VFS_CMD_GET_LABEL_FS, VFS_CMD_BLOCK_READ, VFS_CMD_BLOCK_WRITE
 } vfs_cmd_t;
 
 typedef enum { VFS_LOCK_UN = 1, VFS_LOCK_SH, VFS_LOCK_EX } vfs_lock_type_t;
@@ -63,6 +63,12 @@ int vfs_readdir(int fd, vfs_dirent_t* out_entries, int max_entries);
 int vfs_flock(int fd, vfs_lock_type_t lock_type);
 int64_t vfs_seek(int fd, int64_t offset, vfs_seek_t whence);
 int vfs_stat(int fd, vfs_stat_info_t* out_stat);
+
+void* vfs_register_fs(const char* name);
+int vfs_mount_fs(void* context, const char* path);
+int vfs_umount_fs(void* fs_inst);
+int vfs_block_read(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, void* buf);
+int vfs_block_write(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, const void* buf);
 
 #ifdef __cplusplus
 }

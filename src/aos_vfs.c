@@ -297,3 +297,115 @@ int vfs_stat(int fd, vfs_stat_info_t* out_stat) {
     shm_free(shm_id);
     return res;
 }
+
+void* vfs_register_fs(const char* name) {
+    if (!name) return NULL;
+    ensure_vfs_init();
+
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = VFS_CMD_REGISTER_FS;
+    strlcpy((char*)req.data, name, 64);
+
+    if (vfs_rpc_call(&req, &resp) == VFS_ERR_OK) {
+        return (void*)resp.param2;
+    }
+    return NULL;
+}
+
+int vfs_mount_fs(void* context, const char* path) {
+    if (!context || !path) return -1;
+    ensure_vfs_init();
+
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = VFS_CMD_MOUNT_FS;
+    req.param2 = (uint64_t)context;
+    strlcpy((char*)req.data, path, 64);
+
+    return vfs_rpc_call(&req, &resp);
+}
+
+int vfs_umount_fs(void* fs_inst) {
+    if (!fs_inst) return -1;
+    ensure_vfs_init();
+
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = VFS_CMD_UMOUNT_FS;
+    req.param2 = (uint64_t)fs_inst;
+
+    return vfs_rpc_call(&req, &resp);
+}
+
+int vfs_block_read(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, void* buf) {
+    if (!dev || !buf || count == 0 || sector_size == 0) return -1;
+    ensure_vfs_init();
+
+    uint64_t size_bytes = count * sector_size;
+    void* shm_vaddr = 0;
+    uint64_t shm_id = shm_alloc(size_bytes, &shm_vaddr);
+    if (!shm_id) return -1;
+
+    shm_allow(shm_id, vfs_driver_pid);
+
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = VFS_CMD_BLOCK_READ;
+    req.param2 = (uint64_t)dev;
+    req.param3 = lba;
+    
+    *(uint64_t*)(req.data) = shm_id;
+    *(uint64_t*)(req.data + sizeof(uint64_t)) = count;
+
+    int res = vfs_rpc_call(&req, &resp);
+
+    if (res == VFS_ERR_OK) {
+        memcpy(buf, shm_vaddr, size_bytes);
+    }
+
+    shm_free(shm_id);
+    return res;
+}
+
+int vfs_block_write(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, const void* buf) {
+    if (!dev || !buf || count == 0 || sector_size == 0) return -1;
+    ensure_vfs_init();
+
+    uint64_t size_bytes = count * sector_size;
+    void* shm_vaddr = 0;
+    uint64_t shm_id = shm_alloc(size_bytes, &shm_vaddr);
+    if (!shm_id) return -1;
+
+    memcpy(shm_vaddr, buf, size_bytes);
+    shm_allow(shm_id, vfs_driver_pid);
+
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = VFS_CMD_BLOCK_WRITE;
+    req.param2 = (uint64_t)dev;
+    req.param3 = lba;
+    
+    *(uint64_t*)(req.data) = shm_id;
+    *(uint64_t*)(req.data + sizeof(uint64_t)) = count;
+
+    int res = vfs_rpc_call(&req, &resp);
+
+    shm_free(shm_id);
+    return res;
+}

@@ -14,19 +14,18 @@ int64_t syscall(uint64_t nr, uint64_t arg1, uint64_t arg2, uint64_t arg3,
                 uint64_t arg4, uint64_t arg5) {
     int64_t ret;
 
-    register uint64_t r10 asm("r10") = arg4;
-    register uint64_t r8  asm("r8")  = arg5;
-
     asm volatile (
+        "mov %5, %%r10\n\t"
+        "mov %6, %%r8\n\t"
         "syscall"
-        : "=a" (ret)          // Выход: RAX -> ret
-        : "a" (nr),           // Вход: RAX = Номер сисколла
-          "D" (arg1),         // Вход: RDI = Аргумент 1
-          "S" (arg2),         // Вход: RSI = Аргумент 2
-          "d" (arg3),         // Вход: RDX = Аргумент 3
-          "r" (r10),          // Вход: R10 = Аргумент 4 (связано через register variable)
-          "r" (r8)            // Вход: R8  = Аргумент 5
-        : "rcx", "r11", "memory" // Clobbers: syscall портит RCX и R11
+        : "=a" (ret)
+        : "a" (nr),
+          "D" (arg1),
+          "S" (arg2),
+          "d" (arg3),
+          "r" (arg4),
+          "r" (arg5)
+        : "rcx", "r11", "r10", "r8", "memory"
     );
 
     return ret;

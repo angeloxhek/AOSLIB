@@ -15,6 +15,7 @@ typedef enum {
     DT_VIDEO,
     DT_WND,
     DT_INPUT,
+    DT_PCI,
     DT_USER = 100
 } driver_type_t;
 
@@ -90,7 +91,7 @@ typedef struct aos_driver_info_t {
 } __attribute__((packed)) aos_driver_info_t;
 
 #define AOS_DECLARE_DRIVER(drv_type, perms, ...) \
-    __attribute__((section(".driver_info"), used)) \
+    __attribute__((section(".driver_info"), used, visibility("default"))) \
     const aos_driver_info_t _driver_metadata = { \
         .magic = AOS_DRIVER_MAGIC, \
         .version = 1, \
