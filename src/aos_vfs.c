@@ -298,7 +298,7 @@ int vfs_stat(int fd, vfs_stat_info_t* out_stat) {
     return res;
 }
 
-void* vfs_register_fs(const char* name) {
+fs_context_t vfs_register_fs(const char* name) {
     if (!name) return NULL;
     ensure_vfs_init();
 
@@ -311,13 +311,13 @@ void* vfs_register_fs(const char* name) {
     strlcpy((char*)req.data, name, 64);
 
     if (vfs_rpc_call(&req, &resp) == VFS_ERR_OK) {
-        return (void*)resp.param2;
+        return (fs_context_t)resp.param2;
     }
     return NULL;
 }
 
-int vfs_mount_fs(void* context, const char* path) {
-    if (!context || !path) return -1;
+fs_instance_t vfs_mount_fs(fs_context_t context, const char* path) {
+    if (!context || !path) return NULL;
     ensure_vfs_init();
 
     message_t req, resp;
@@ -329,10 +329,28 @@ int vfs_mount_fs(void* context, const char* path) {
     req.param2 = (uint64_t)context;
     strlcpy((char*)req.data, path, 64);
 
-    return vfs_rpc_call(&req, &resp);
+	int res = vfs_rpc_call(&req, &resp);
+	if (res == VFS_ERR_OK) return (fs_instance_t)resp.param2;
+    return NULL;
 }
 
-int vfs_umount_fs(void* fs_inst) {
+void vfs_mount_fs_async(void* context, const char* path) {
+    if (!context || !path) return;
+    ensure_vfs_init();
+
+    message_t req;
+    memset(&req, 0, sizeof(message_t));
+
+    req.type = MSG_TYPE_VFS;
+    req.subtype = MSG_SUBTYPE_SEND;
+    req.param1 = VFS_CMD_MOUNT_FS;
+    req.param2 = (uint64_t)context;
+    strlcpy((char*)req.data, path, 64);
+
+    ipc_send(vfs_driver_pid, &req);
+}
+
+int vfs_umount_fs(fs_instance_t fs_inst) {
     if (!fs_inst) return -1;
     ensure_vfs_init();
 
@@ -347,7 +365,7 @@ int vfs_umount_fs(void* fs_inst) {
     return vfs_rpc_call(&req, &resp);
 }
 
-int vfs_block_read(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, void* buf) {
+int vfs_block_read(block_dev_t* dev, uint64_t lba, uint64_t count, uint32_t sector_size, void* buf) {
     if (!dev || !buf || count == 0 || sector_size == 0) return -1;
     ensure_vfs_init();
 
@@ -380,7 +398,7 @@ int vfs_block_read(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size
     return res;
 }
 
-int vfs_block_write(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, const void* buf) {
+int vfs_block_write(block_dev_t* dev, uint64_t lba, uint64_t count, uint32_t sector_size, const void* buf) {
     if (!dev || !buf || count == 0 || sector_size == 0) return -1;
     ensure_vfs_init();
 

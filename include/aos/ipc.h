@@ -16,7 +16,8 @@ typedef enum {
     MSG_TYPE_INPUT,
     MSG_TYPE_VIDEO,
     MSG_TYPE_WND,
-    MSG_TYPE_HARDWARE
+	MSG_TYPE_PCI,
+    MSG_TYPE_HARDWARE = 100
 } msg_type_t;
 
 typedef enum {

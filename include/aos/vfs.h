@@ -2,6 +2,7 @@
 #define AOS_VFS_H
 
 #include "types.h"
+#include "vfs_driver.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,11 +65,12 @@ int vfs_flock(int fd, vfs_lock_type_t lock_type);
 int64_t vfs_seek(int fd, int64_t offset, vfs_seek_t whence);
 int vfs_stat(int fd, vfs_stat_info_t* out_stat);
 
-void* vfs_register_fs(const char* name);
-int vfs_mount_fs(void* context, const char* path);
-int vfs_umount_fs(void* fs_inst);
-int vfs_block_read(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, void* buf);
-int vfs_block_write(void* dev, uint64_t lba, uint64_t count, uint32_t sector_size, const void* buf);
+fs_context_t vfs_register_fs(const char* name);
+fs_instance_t vfs_mount_fs(fs_context_t context, const char* path);
+void vfs_mount_fs_async(void* context, const char* path);
+int vfs_umount_fs(fs_instance_t fs_inst);
+int vfs_block_read(block_dev_t* dev, uint64_t lba, uint64_t count, uint32_t sector_size, void* buf);
+int vfs_block_write(block_dev_t* dev, uint64_t lba, uint64_t count, uint32_t sector_size, const void* buf);
 
 #ifdef __cplusplus
 }

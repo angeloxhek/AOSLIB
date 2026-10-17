@@ -453,5 +453,6 @@ driver_type_t dt_from_str(const char* str) {
     if (strcmp(str, "DT_VFS") == 0) return DT_VFS;
     if (strcmp(str, "DT_AUTH") == 0) return DT_AUTH;
     if (strcmp(str, "DT_INIT") == 0) return DT_INIT;
+    if (strcmp(str, "DT_PCI") == 0) return DT_PCI;
     return DT_USER;
 }

@@ -23,6 +23,17 @@ void hal_outw(uint16_t port, uint16_t val) {
     __asm__ volatile ( "outw %w0, %w1" : : "a"(val), "Nd"(port) : "memory");
 }
 
+uint32_t hal_inl(uint16_t port) {
+    uint32_t ret;
+    __asm__ volatile ( "inl %w1, %k0" : "=a"(ret) : "Nd"(port) : "memory");
+    return ret;
+}
+
+void hal_outl(uint16_t port, uint32_t val) {
+    __asm__ volatile ( "outl %k0, %w1" : : "a"(val), "Nd"(port) : "memory");
+}
+
+
 void hal_insw(uint16_t port, void* addr, uint32_t count) {
     __asm__ volatile ( "cld; rep insw" : "+D" (addr), "+c" (count) : "d" (port) : "memory" );
 }
@@ -44,7 +55,7 @@ void hal_memcpy_toio(void* dest, const void* src, size_t bytes) {
         __asm__ volatile (
             "movups (%1), %%xmm0\n"
             "movups %%xmm0, (%0)\n"
-            : : "r"(d), "r"(s) : "xmm0", "memory"
+            : "+r"(d), "+r"(s) : : "xmm0", "memory"
         );
         d += 16;
         s += 16;
