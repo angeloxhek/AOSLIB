@@ -298,9 +298,95 @@ int get_time_info(time_info_t* info) {
 	return (int)syscall(SYS_GET_TIME_INFO, (uint64_t)info, 0, 0, 0, 0);
 }
 
+static int get_file_association(const char* filepath, char* out_app_path, size_t max_len) {
+    if (!filepath || !out_app_path) return 0;
+
+    const char* dot = strrchr(filepath, '.');
+    if (dot && strcasecmp(dot, ".elf") == 0) return 0;
+
+    int fd = vfs_open("/boot/configs/assoc.conf", VFS_FREAD);
+    if (fd < 0) return 0;
+
+    vfs_stat_info_t st;
+    if (vfs_stat(fd, &st) != 0 || st.size_bytes == 0) {
+        vfs_close(fd);
+        return 0;
+    }
+
+    char* buf = (char*)malloc(st.size_bytes + 1);
+    if (!buf) {
+        vfs_close(fd);
+        return 0;
+    }
+
+    vfs_read(fd, buf, st.size_bytes);
+    buf[st.size_bytes] = '\0';
+    vfs_close(fd);
+
+    int found = 0;
+    char default_app[256] = {0};
+    char* line = buf;
+
+    while (*line) {
+        while (*line == ' ' || *line == '\r' || *line == '\n') line++;
+        if (!*line) break;
+
+        char* eol = strchr(line, '\n');
+        if (eol) *eol = '\0';
+
+        if (*line != '#') {
+            char* eq = strchr(line, '=');
+            if (eq) {
+                *eq = '\0';
+                char* ext = line;
+                char* app = eq + 1;
+
+                char* r = strchr(app, '\r');
+                if (r) *r = '\0';
+
+                if (dot && strcasecmp(ext, dot) == 0) {
+                    strlcpy(out_app_path, app, max_len);
+                    found = 1;
+                    break;
+                }
+                else if (strcmp(ext, "*") == 0) {
+                    strlcpy(default_app, app, sizeof(default_app));
+                }
+            }
+        }
+
+        if (!eol) break;
+        line = eol + 1;
+    }
+
+    if (!found && default_app[0] != '\0') {
+        strlcpy(out_app_path, default_app, max_len);
+        found = 1;
+    }
+
+    free(buf);
+    return found;
+}
+
 int sysspawn(const char* path, startup_info_t* info, uint64_t arg2, apid_t* respid) {
-	spawn_args_t args;
 	if (!path || !info) return SYS_RES_INVALID;
+
+    char app_path[256];
+    if (get_file_association(path, app_path, sizeof(app_path))) {
+        char* new_argv[] = { app_path, (char*)path, NULL };
+        
+        startup_info_t new_info;
+        memcpy(&new_info, info, sizeof(startup_info_t));
+        new_info.type = STARTUP_MAIN;
+        new_info.data.main.argc = 2;
+        new_info.data.main.argv = new_argv;
+        new_info.data.main.envc = 0;
+        new_info.data.main.envp = NULL;
+
+        return sysspawn(app_path, &new_info, arg2, respid);
+    }
+	
+	spawn_args_t args;
 	int fd = vfs_open(path, VFS_FREAD);
 	if (fd < 0) return fd;
 	vfs_stat_info_t* stat = (vfs_stat_info_t*)malloc(sizeof(vfs_stat_info_t));
@@ -359,7 +445,24 @@ uint32_t sysfork(void) {
 }
 
 int sysexec(const char* path, startup_info_t* info, uint64_t arg2) {
-	spawn_args_t args;
+	if (!path || !info) return SYS_RES_INVALID;
+
+    char app_path[256];
+    if (get_file_association(path, app_path, sizeof(app_path))) {
+        char* new_argv[] = { app_path, (char*)path, NULL };
+        
+        startup_info_t new_info;
+        memcpy(&new_info, info, sizeof(startup_info_t));
+        new_info.type = STARTUP_MAIN;
+        new_info.data.main.argc = 2;
+        new_info.data.main.argv = new_argv;
+        new_info.data.main.envc = 0;
+        new_info.data.main.envp = NULL;
+
+        return sysexec(app_path, &new_info, arg2);
+    }
+
+    spawn_args_t args;
 	if (!path || !info) return SYS_RES_INVALID;
 	int fd = vfs_open(path, VFS_FREAD);
 	if (fd < 0) return fd;

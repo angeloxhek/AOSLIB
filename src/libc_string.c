@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 void* memset(void* ptr, int value, size_t n) {
     uint64_t pattern = (uint64_t)value;
@@ -58,6 +59,9 @@ int memcmp(const void* s1, const void* s2, size_t n) {
 }
 
 int strcmp(const char* s1, const char* s2) {
+	if (s1 == s2) {
+        return 0;
+    }
     while (*s1 && (*s1 == *s2)) {
         s1++;
         s2++;
@@ -66,12 +70,35 @@ int strcmp(const char* s1, const char* s2) {
 }
 
 int strncmp(const char* s1, const char* s2, size_t n) {
+	if (s1 == s2) {
+        return 0;
+    }
     for (size_t i = 0; i < n; i++) {
         if (s1[i] != s2[i] || s1[i] == '\0')
             return (uint8_t)s1[i] - (uint8_t)s2[i];
     }
     return 0;
 }
+
+int strcasecmp(const char *s1, const char *s2) 
+{
+    if (s1 == s2) {
+        return 0;
+    }
+
+    while (*s1 && *s2) {
+        int res = tolower((unsigned char)*s1) - tolower((unsigned char)*s2);
+        if (res) {
+            return res;
+        }
+
+        s1++;
+        s2++;
+    }
+	
+    return tolower((unsigned char)*s1) - tolower((unsigned char)*s2);
+}
+
 
 char *strcpy(char *dest, const char *src) {
     char *start = dest;

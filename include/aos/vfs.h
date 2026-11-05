@@ -44,7 +44,7 @@ typedef struct {
     char name[256];
     uint64_t size;
     uint32_t type;
-    uint32_t reserved;
+    int is_virtual;
 } vfs_dirent_t;
 
 typedef struct {
