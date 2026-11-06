@@ -427,3 +427,50 @@ int vfs_block_write(block_dev_t* dev, uint64_t lba, uint64_t count, uint32_t sec
     shm_free(shm_id);
     return res;
 }
+
+int vfs_unlinkat(int dir_fd, const char* name) {
+    if (dir_fd < 0 || !name) return -1;
+    ensure_vfs_init();
+    
+    int len = strlen(name);
+    if (len >= 64) return -1;
+    
+    message_t req, resp;
+    memset(&req, 0, sizeof(message_t));
+    memset(&resp, 0, sizeof(message_t));
+
+    req.subtype = MSG_SUBTYPE_QUERY;
+    req.param1 = VFS_CMD_UNLINKAT;
+    req.param2 = dir_fd;
+    memcpy(req.data, name, len + 1);
+
+    return vfs_rpc_call(&req, &resp);
+}
+
+int vfs_unlink(const char* path) {
+    if (!path) return -1;
+    
+    char path_copy[256];
+    strlcpy(path_copy, path, 256);
+    
+    char* last_slash = strrchr(path_copy, '/');
+    char* filename = NULL;
+    char* dirname = NULL;
+    
+    if (last_slash) {
+        *last_slash = '\0';
+        filename = last_slash + 1;
+        dirname = path_copy[0] == '\0' ? "/" : path_copy;
+    } else {
+        filename = path_copy;
+        dirname = ".";
+    }
+    
+    int dir_fd = vfs_open(dirname, VFS_FREAD);
+    if (dir_fd < 0) return -1;
+    
+    int res = vfs_unlinkat(dir_fd, filename);
+    
+    vfs_close(dir_fd);
+    return res;
+}

@@ -29,7 +29,8 @@ typedef enum {
     VFS_CMD_READ, VFS_CMD_WRITE, VFS_CMD_STAT,
     VFS_CMD_LIST, VFS_CMD_FLOCK, VFS_CMD_SEEK,
 	VFS_CMD_REGISTER_FS, VFS_CMD_MOUNT_FS, VFS_CMD_UMOUNT_FS,
-	VFS_CMD_GET_LABEL_FS, VFS_CMD_BLOCK_READ, VFS_CMD_BLOCK_WRITE
+	VFS_CMD_GET_LABEL_FS, VFS_CMD_BLOCK_READ, VFS_CMD_BLOCK_WRITE,
+	VFS_CMD_UNLINKAT
 } vfs_cmd_t;
 
 typedef enum { VFS_LOCK_UN = 1, VFS_LOCK_SH, VFS_LOCK_EX } vfs_lock_type_t;
@@ -64,6 +65,8 @@ int vfs_readdir(int fd, vfs_dirent_t* out_entries, int max_entries);
 int vfs_flock(int fd, vfs_lock_type_t lock_type);
 int64_t vfs_seek(int fd, int64_t offset, vfs_seek_t whence);
 int vfs_stat(int fd, vfs_stat_info_t* out_stat);
+int vfs_unlinkat(int dir_fd, const char* name);
+int vfs_unlink(const char* path);
 
 fs_context_t vfs_register_fs(const char* name);
 fs_instance_t vfs_mount_fs(fs_context_t context, const char* path);
