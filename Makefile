@@ -33,7 +33,7 @@ GRAY   := \033[0;37m
 NC     := \033[0m
 
 ifeq ($(ARCH),x86_64)
-    ARCH_CFLAGS ?= -m64 -mno-red-zone
+    ARCH_CFLAGS ?= -m64 -mno-red-zone -msse -msse2
 endif
 
 COMMON_CFLAGS ?= -Wall -Wextra -std=gnu11 -fno-omit-frame-pointer -ffreestanding -fno-pic -fno-pie \
