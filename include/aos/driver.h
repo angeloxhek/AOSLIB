@@ -124,6 +124,7 @@ void hal_insw(uint16_t port, void* addr, uint32_t count);
 void hal_outsw(uint16_t port, const void* addr, uint32_t count);
 void hal_cpu_relax(void);
 void hal_memcpy_toio(void* dest, const void* src, size_t bytes);
+void hal_memcpy_toio_aligned(void* dest, const void* src, size_t bytes);
 
 #ifdef __cplusplus
 }
