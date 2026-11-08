@@ -127,7 +127,7 @@ void ipc_sync(void) {
 
 void ipc_recv(message_t* out_msg) {
     if (pending_head) {
-        *out_msg = pending_head->msg;
+        if (out_msg) *out_msg = pending_head->msg;
         msg_node_t* temp = pending_head;
         pending_head = pending_head->next;
         if (!pending_head) pending_tail = NULL;
@@ -139,7 +139,7 @@ void ipc_recv(message_t* out_msg) {
 
 int64_t ipc_tryrecv(message_t* out_msg) {
     if (pending_head) {
-        *out_msg = pending_head->msg;
+        if (out_msg) *out_msg = pending_head->msg;
         msg_node_t* temp = pending_head;
         pending_head = pending_head->next;
         if (!pending_head) pending_tail = NULL;
@@ -160,7 +160,7 @@ void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id
 			(id == 0 || id == curr->msg.id) &&
 			(flags == 0 || (flags & curr->msg.flags) == flags)) {
             
-            *out_msg = curr->msg;
+            if (out_msg) *out_msg = curr->msg;
             
             if (prev) prev->next = curr->next;
             else pending_head = curr->next;
@@ -184,7 +184,7 @@ void ipc_recv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t id
 			(id == 0 || id == temp_msg.id) &&
 			(flags == 0 || (flags & temp_msg.flags) == flags)) {
             
-            *out_msg = temp_msg;
+            if (out_msg) *out_msg = temp_msg;
             return;
         }
         
@@ -201,7 +201,7 @@ int ipc_tryrecv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t 
             (subtype == MSG_SUBTYPE_NONE || curr->msg.subtype == subtype) &&
 			(id == 0 || id == curr->msg.id) &&
 			(flags == 0 || (flags & curr->msg.flags) == flags)) {
-            *out_msg = curr->msg;
+            if (out_msg) *out_msg = curr->msg;
             if (prev) prev->next = curr->next;
             else pending_head = curr->next;
             if (curr == pending_tail) pending_tail = prev;
@@ -220,7 +220,7 @@ int ipc_tryrecv_ex(apid_t pid, msg_type_t type, msg_subtype_t subtype, uint64_t 
 			(id == 0 || id == temp_msg.id) &&
 			(flags == 0 || (flags & temp_msg.flags) == flags)) {
             
-            *out_msg = temp_msg;
+            if (out_msg) *out_msg = temp_msg;
             return 0;
         }
         queue_message(temp_msg);

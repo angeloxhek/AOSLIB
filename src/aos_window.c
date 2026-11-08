@@ -89,13 +89,14 @@ void window_flush(window_t* win) {
     
     hal_memcpy_toio(front_buffer, back_buffer, frame_size);
 
-    message_t req;
+    message_t req, resp;
     memset(&req, 0, sizeof(message_t));
+	memset(&resp, 0, sizeof(message_t));
     req.type = MSG_TYPE_WND;
     req.subtype = MSG_SUBTYPE_SEND;
     req.param1 = WND_CMD_FLUSH;
     req.param2 = win->win_id;
-    ipc_send(wnd_driver_pid, &req);
+    wnd_rpc_call(&req, &resp);
 }
 
 int get_screen_info(screen_info_t* info) {
